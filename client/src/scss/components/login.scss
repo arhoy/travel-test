@@ -1,0 +1,11 @@
+.Login { 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height:100vh;
+    background: linear-gradient(to right bottom,#c6ffdd, #fbd786, #f7797d);
+    h1 {
+        font-family: 'Lemon',cursive;
+    }
+}

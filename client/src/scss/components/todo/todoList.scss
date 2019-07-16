@@ -1,0 +1,81 @@
+// To Do List styles
+.TodoList {
+    list-style: none;
+    padding: 1rem;
+    margin: 1rem;
+    border-radius: 1rem;
+    button { 
+      outline: none;
+    }
+    & li {
+      outline: none;
+      margin: 1rem auto;
+      border: 2px dashed black;
+      padding: 2rem 0.5rem;
+      max-width: 105rem;
+      justify-content: center;
+    }
+    &__completed, &__uncompleted, &__inprogress {
+      font-weight: 900;
+    }
+    &__completed {
+      color:$color-green;
+    }
+    &__uncompleted {
+      color: $color-red-dark;
+    }
+    &__inprogress {
+      color: $color-blue;
+    }
+
+    &__green {
+      background: $color-green-light
+    }
+
+    &__red {
+      background: $color-red-light;
+    }
+    &__blue {
+      background: $color-blue-light;
+    }
+
+
+    &__remove {
+      color: black;
+      font-weight: bold;
+      margin-left: 1rem;
+      transition: all .5s ease-in;
+      margin-left: auto;
+    }
+
+    &__img {
+      transition: all 0.5s ease;
+      outline: none;
+      &:hover {
+        transform: rotate(90deg);
+      }
+
+    }
+    & button {
+      border: none;
+      padding: 2px;
+      margin: 0 3px;
+      background: none;
+      cursor: pointer;
+    }
+
+    &__underline {
+      text-decoration: underline;
+      text-decoration-style: double;
+      font-size: 3rem;
+    }
+
+    &__text {
+      font-weight: bold;
+      font-size: 2.1rem;
+      &-editing {
+        opacity: 0.7;
+      }
+    }
+  
+  }

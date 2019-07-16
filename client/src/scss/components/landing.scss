@@ -1,0 +1,37 @@
+.Landing {
+    display: grid;
+    justify-content:center;
+    align-items:center;
+    height: 100vh;
+    background: linear-gradient(#00b09b,#96c93d);
+    h1 {
+        font-family: 'Lemon', cursive;
+        padding: 0;
+        margin: 0;
+    }
+    p {
+        padding: 0;
+        font-style: italic;
+        margin: 6rem 0rem;
+        margin-top:1rem;
+    }
+
+
+    &__button {
+        padding: 1rem 2rem;
+        margin: 1rem;
+        color: $color-black;
+        border-radius: 1rem;
+        text-decoration: none;
+
+        &-1 {
+            background: $color-green-light;
+        }
+        &-2 {
+            background: $color-green-light-2;
+        }
+
+    }
+
+
+}

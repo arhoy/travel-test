@@ -1,0 +1,10 @@
+.alert {
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    font-size: 1.6rem;
+
+    &-danger {
+        background: $color-red-light;
+        color: $color-red-dark;
+    }
+}

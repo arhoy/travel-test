@@ -1,0 +1,9 @@
+.TodoForm {
+    padding: 1rem;
+    &__input {
+        border: 2px solid $color-green;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        outline: none;
+    }
+}

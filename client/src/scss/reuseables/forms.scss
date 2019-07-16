@@ -1,0 +1,31 @@
+.form {
+    padding: 1rem;
+    &-group {
+    
+        margin: 1rem 0rem;
+        & input {
+            padding: 0.5rem 1.5rem;
+            outline: none;
+            border: none;
+            border-radius: 0.7rem;
+        }
+        &--todo { 
+            & input {
+                border-radius: 0rem;
+                border-bottom: 2px solid black;
+            }
+        }
+
+        &--login, &--register {
+            & input {
+                padding: 0.7rem 2rem;
+            }
+        }
+    }
+
+
+    & button {
+        display: flex;
+        justify-self: flex-end;
+    }
+}
