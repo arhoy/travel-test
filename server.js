@@ -6,6 +6,9 @@ const path = require('path');
 
 const app = express();
 
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./routes/api/error');
+
 // connect db
 connectDB();
 
@@ -18,6 +21,14 @@ app.use('/api/users', require('./routes/api/users'));
 app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/tours', require('./routes/api/tours'));
 
+// 404 route
+app.all('*', ( req, res, next ) => {
+
+  next(new AppError( `Requested route: ${req.originalUrl} not found!`, 404));
+})
+
+// ERROR HANDLING MIDDLEWARE
+app.use(globalErrorHandler);
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
@@ -32,4 +43,10 @@ if (process.env.NODE_ENV === 'production') {
   const PORT = process.env.PORT || 5000;
   
   app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
-  
+
+
+  // UNHANDLED REJECTIONS
+  process.on('unhandledRejection', err => {
+    console.log(err.name, err.message, 'Unhandled Rejection error!');
+    process.exit(1);
+  })

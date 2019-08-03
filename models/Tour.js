@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const slugify = require('slugify');
+const validator = require('validator');
 
 const TourSchema = new Schema({
     name: {
@@ -105,8 +107,48 @@ const TourSchema = new Schema({
           type: mongoose.Schema.ObjectId,
           ref: 'User'
         }
-      ]
+      ],
+      secretTour: {
+        type: Boolean,
+        default: false
+      }
+},
+{
+  toObject: { virtuals: true },
+  toJSON: { virtuals: true }
+}
+);
+
+TourSchema.virtual('durationWeeks').get( function(){
+  return this.duration / 7 ;
+} )
+
+TourSchema.virtual('customerPrice').get( function() {
+  return (this.price *1.07).toFixed(2);
+} )
+
+// DOCUMENT MIDDLEWARE -- runs before .save() and .create() // pre save hooks
+TourSchema.pre('save', function(next) {
+    this.slug = slugify(this.name, { lower: true });
+    next();
+})
+
+// QUERY MIDDLEWARE
+TourSchema.pre(/^find/, function(next) {
+  this.find({ secretTour:{ $ne: true } })
+  this.start = Date.now();
+  next();
 })
 
 
+TourSchema.post(/^find/, function(doc, next) {
+  console.log(`The query took ${Date.now() - this.start} ms to complete`)
+  next();
+})
+
+//AGGREGATION MIDDLEWARE
+TourSchema.pre(/^aggregate/, function(next) {
+  this.pipeline().unshift( { $match: { secretTour: { $ne : true } } });
+  next();
+})
 module.exports = Tour = mongoose.model('tours',TourSchema);

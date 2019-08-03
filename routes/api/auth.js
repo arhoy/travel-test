@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
+
 const auth = require('../../middleware/auth');
-const jwt = require('jsonwebtoken');
-const config = require('../../config/keys').jwtSecret;
+
 const { check, validationResult } = require('express-validator');
+const signToken = require('../helpers/signToken');
 
 const User = require('../../models/User');
 
@@ -21,9 +21,11 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// @route    POST api/auth
-// @desc     Authenticate user & get token
-// @access   Public
+// name         :   Login User
+// Type         :   POST
+// Route        :   api/auth
+// Description  :   Log user in and send token
+// Access       :   User must be registered. 
 router.post(
   '/',
   [
@@ -39,36 +41,74 @@ router.post(
     const { email, password } = req.body;
  
     try {
-      let user = await User.findOne({ email });
-
-      if (!user) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: 'Invalid Credentials' }] });
-      }
       
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
+      let user = await User.findOne({ email }).select('+password +active');
+   
+      // user does not exist or password is not correct.
+      if (!user || !(await user.checkPassword(password, user.password)) ) {
         return res
           .status(400)
           .json({ errors: [{ msg: 'Invalid Credentials' }] });
       }
 
-      const payload = {
-        user: {
-          id: user.id
-        }
-      };
+      if(user.active === false) {
+          return res.json({msg:'You account was inactivated, please go to /reactive to reactive your account.'})
+      }
 
-      jwt.sign(
-        payload,
-        config,
-        { expiresIn: 360000 },
-        (err, token) => {
-          if (err) throw err;
-          res.json({ token });
-        }
-      );
+      // impliment jwt for accessing protected routes
+      const token = signToken(user.id);
+        // send back token
+        res.json({token});
+
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+  }
+);
+
+// name         :   Login User
+// Type         :   PATCH
+// Route        :   api/auth/reactivate
+// Description  :   Log user in and send token
+// Access       :   User must be registered. 
+router.post(
+  '/reactivate',
+  [
+    check('email', 'Please include a valid email').isEmail(),
+    check('password', 'Password is required').exists()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+ 
+    try {
+      
+      let user = await User.findOne({ email }).select('+password +active');
+    
+      // user does not exist or password is not correct.
+      if (!user || !(await user.checkPassword(password, user.password)) ) {
+        return res
+          .status(400)
+          .json({ errors: [{ msg: 'Invalid Credentials' }] });
+      }
+
+      if(user.active !== false) {
+          return res.json({msg:'Please got to login route. /login'})
+      }
+    
+      // impliment jwt for accessing protected routes
+      const token = signToken(user.id);
+
+      user.active = true
+      await user.save({ validateBeforeSave: false });
+        // send back token
+      res.json({token});
+
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');
