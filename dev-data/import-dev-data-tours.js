@@ -26,7 +26,7 @@ const connectDB = async () => {
 connectDB();
 
 // READ JSON FILE
-const tours = JSON.parse(fs.readFileSync('dev-data/tours-simple.json','utf-8'));
+const tours = JSON.parse(fs.readFileSync('dev-data/tours.json','utf-8'));
 
 // IMPORT DATA INTO DB
     // will import an array of json objects and store to the Tour db
@@ -51,7 +51,7 @@ const deleteData = async () => {
     process.exit();
 }
 
-// simple command line run this file only using: node dev-data/import-dev-data with flag --import, --delete. see below
+// simple command line run this file only using: node dev-data/import-dev-data-tours with flag --import, --delete. see below
 if(process.argv[2] === '--import'){
     importData()
 }

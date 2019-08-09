@@ -20,6 +20,7 @@ app.use('/api/tasks', require('./routes/api/tasks'));
 app.use('/api/users', require('./routes/api/users'));
 app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/tours', require('./routes/api/tours'));
+app.use('/api/reviews', require('./routes/api/reviews'));
 
 // 404 route
 app.all('*', ( req, res, next ) => {

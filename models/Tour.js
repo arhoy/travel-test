@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const slugify = require('slugify');
-const validator = require('validator');
+
 
 const TourSchema = new Schema({
     name: {
@@ -34,7 +34,7 @@ const TourSchema = new Schema({
         default: 4.5,
         min: [1, 'Rating must be above 1.0'],
         max: [5, 'Rating must be below 5.0'],
-        set: val => Math.round(val * 10) / 10 // 4.666666, 46.6666, 47, 4.7
+        set: val => Math.round(val * 100) / 100 // 4.666666, 46.6666, 47, 4.7
       },
       ratingsQuantity: {
         type: Number,
@@ -70,7 +70,7 @@ const TourSchema = new Schema({
       images: [String],
       createdAt: {
         type: Date,
-        default: Date.now(),
+        default: Date.now,
         select: false
       },
       startDates: [Date],
@@ -104,20 +104,23 @@ const TourSchema = new Schema({
       ],
       guides: [
         {
-          type: mongoose.Schema.ObjectId,
+          type: Schema.Types.ObjectId,
           ref: 'User'
         }
-      ],
-      secretTour: {
-        type: Boolean,
-        default: false
-      }
+      ]
 },
 {
   toObject: { virtuals: true },
   toJSON: { virtuals: true }
 }
 );
+
+// Virtual Populate
+TourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id'
+})
 
 TourSchema.virtual('durationWeeks').get( function(){
   return this.duration / 7 ;
@@ -134,12 +137,19 @@ TourSchema.pre('save', function(next) {
 })
 
 // QUERY MIDDLEWARE
-TourSchema.pre(/^find/, function(next) {
-  this.find({ secretTour:{ $ne: true } })
-  this.start = Date.now();
-  next();
-})
 
+// removing secret tour from output
+  TourSchema.pre(/^find/, function(next) {
+    this.find({ secretTour:{ $ne: true } })
+    this.start = Date.now();
+    next();
+  })
+
+// always populating tours
+  // TourSchema.pre(/^find/, function(next) {
+  //   this.populate('guides',['name','role','email']);
+  //   next();
+  // })
 
 TourSchema.post(/^find/, function(doc, next) {
   console.log(`The query took ${Date.now() - this.start} ms to complete`)
@@ -147,8 +157,14 @@ TourSchema.post(/^find/, function(doc, next) {
 })
 
 //AGGREGATION MIDDLEWARE
-TourSchema.pre(/^aggregate/, function(next) {
-  this.pipeline().unshift( { $match: { secretTour: { $ne : true } } });
-  next();
-})
-module.exports = Tour = mongoose.model('tours',TourSchema);
+    // TourSchema.pre(/^aggregate/, function(next) {
+    //   this.pipeline().unshift( { $match: { secretTour: { $ne : true } } });
+    //   next();
+    // })
+
+// TourSchema Indexes
+TourSchema.index({ price: 1, ratingsAverage: -1 });
+TourSchema.index({ slug: 1 });
+TourSchema.index({ startLocation: '2dsphere' });
+
+module.exports = Tour = mongoose.model('Tour', TourSchema);

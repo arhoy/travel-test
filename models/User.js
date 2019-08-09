@@ -24,7 +24,7 @@ const UserSchema = new Schema({
     },
     passwordConfirm : {
         type: String,
-        required: [true, 'Please confirm your password'],
+       // required: [true, 'Please confirm your password'],
         validate: {
             validator: function (el) {
                 return el === this.password
@@ -109,4 +109,4 @@ UserSchema.methods.createPasswordResetToken = function() {
 
 
 
-module.exports = User = mongoose.model('users',UserSchema);
+module.exports = User = mongoose.model('User',UserSchema);

@@ -9,20 +9,11 @@ const auth = require('../../middleware/auth');
 const restrictTo = require('../../middleware/restrictTo');
 const AppError = require('../../utils/appError.js');
 const sendEmail = require('../../utils/email');
+const filterObj = require('../helpers/filterObj');
 
 // import the User Model
 const User = require('../../models/User');
 
-
-
-
-const filterObj = (obj, ...allowedFields) => {
-    const newObj = {};
-    Object.keys(obj).forEach(el => {
-      if (allowedFields.includes(el)) newObj[el] = obj[el];
-    });
-    return newObj;
-  };
 
 // Type         :   POST
 // Route        :   api/users
@@ -86,10 +77,9 @@ router.post(
 // Route        :   api/users
 // Description  :   Get all users from the database
 // Access       :   Only admin user can do this
-
 router.get('/', auth, restrictTo('admin','lead-guide'), async (req, res) => {
     try {
-        const users = await User.find({active: {$ne:false}}).select('-_id name email role');
+        const users = await User.find({active: {$ne:false}}).select('_id name email role');
         res.json(users);
     
 
@@ -98,6 +88,22 @@ router.get('/', auth, restrictTo('admin','lead-guide'), async (req, res) => {
         res.status(500).send('server error');
     }
 });
+
+// Name         :   Get me
+// Type         :   GET
+// Route        :   api/users/me
+// Description  :   Get info for the current logged in user
+// Access       :   Only logged in user can access his info
+router.get('/me', auth, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id).select('-id');
+        // return current user info
+        res.json(user)
+    } catch (error) {
+        console.error(error);
+        return next( new AppError('Not able to get user', 500) );
+    }
+})
 
 // Name         :   Forgot my password
 // Type         :   POST
@@ -230,12 +236,12 @@ router.patch('/updatePassword', auth, async (req, res, next) => {
 // Route        :   api/users/updateme
 // Description  :   User wants to update their user inf
 // Access       :   Must be logged in.
-router.patch('/updateMe',auth, async (req, res, next) => {
+router.patch('/updateMe', auth, async (req, res, next) => {
     try {
         const {name, email, photo, password, passwordConfirm} = req.body;
         if( password || passwordConfirm ) return next( new AppError('Cannot update password here, please see /updateMyPassWord',400));
 
-        // update user doc
+        // update user doc: user can only update name and email
         const filteredBody = filterObj(req.body,'name', 'email');
 
 

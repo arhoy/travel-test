@@ -56,8 +56,8 @@ router.post('/', auth, restrictTo('admin','lead-guide'), async (req, res, next) 
 router.delete('/:id', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        if(!user.admin) {
-            res.json({msg:'Access denied'});
+        if(!user.role) {
+            return res.json({msg:'Access denied'});
         }
 
         // delete the tour
@@ -124,7 +124,13 @@ router.get('/', async (req, res) => {
         // * FINALY EXECUTE QUERY *
         const tour = await query;
         // send back tours array.
-        res.json(tour)
+        res.json(
+            {   
+                success:true,
+                items: tour.length,
+                data: tour
+            }
+        )
 
 
     } catch (error) {
@@ -132,21 +138,51 @@ router.get('/', async (req, res) => {
     }
 })
 
-// Name             :   Tour By ID
+// Name             :   Get Tour By ID
 // Type             :   GET
 // Route            :   api/tours/:id
-// Description      :   Get tour by id
+// Description      :   Get a tour by id
 // Access           :   PUBLIC anyone can see stats
 router.get('/:id', async (req, res, next) => {
     try {
-        const tour = await Tour.findById(req.params.id);
-        if(!tour) throw new AppError(`Could not find Tour Id: ${req.params.id}`, 404);
+        const tour = await Tour.findById(req.params.id)
+            .populate('guides',['name','guide','email','role'])
+            .populate('reviews');
+            ;
+
+        if(!tour) next(new AppError(`Could not find Tour Id: ${req.params.id}`, 404) );
+
+        // return tour
         res.json(tour);
     } catch (error) {
-        next(error);
+        console.error(error);
+        return next( new AppError(`An unknown error occured: ${error}. Please try again later `, 500) );
     }
 })
 
+// Name             :   Update the tour
+// Type             :   PATCH
+// Route            :   api/tours/:tourId
+// Description      :   Update the Tour
+// Access           :   ADMIN - only Admin user can update the tour.
+router.patch('/:tourId', auth, async (req, res, next) => {
+        try {
+             // update tour doc
+            const tour = await Tour.findByIdAndUpdate(
+                req.params.tourId,
+                req.body, {
+                new:true,
+                runValidators:true
+            })
+
+            // return the updated tour
+            res.json(tour)
+        } catch (error) {
+            return next( new AppError(`${error}. Please try again later `, 500) ); 
+        }
+} )
+
+// Name             :   Get Tour Stats
 // Type             :   GET
 // Route            :   api/tours/tour-stats
 // Description      :   Get the tours stats
@@ -185,6 +221,7 @@ router.get('/tour-stats', async (req,res) => {
     }
 })
 
+// Name             :   Most popular tours
 // Type             :   GET
 // Route            :   api/tours/monthly-plan/:year
 // Description      :   Get the most popular tour months
@@ -251,6 +288,87 @@ router.get('/monthly-plan/:year', async (req,res) => {
         res.json({dataItems: plan.length, data: plan });
     } catch (error) {
         
+    }
+})
+
+// Name             :   Get tours within radius
+// Type             :   GET
+// Route            :   api/tours/tours-within/100/center/-14.12,120.12/unit/mi
+// Description      :   find the tours within a certain radius
+// Access           :   PUBLIC  
+router.get('/tours-within/:distance/center/:latlng/unit/:unit', async ( req, res, next ) => {
+    try {
+        const { distance, latlng, unit } = req.params;
+        const [lat, lng] = latlng.split(',');        
+        const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1; 
+
+        if( !lat || !lng ) return next( new AppError('Please provide lat and long in format of lat, lng', 400));
+    
+        const tours = await Tour.find({ startLocation: {$geoWithin : { $centerSphere: [[ lng, lat ], radius] }} })
+    
+        res.json({
+            status: 'success',
+            items: tours.length,
+            data: tours
+        });
+        
+    } catch (error) {
+        console.error(error);
+        next (new AppError(`There was an error with request`,500));
+    }  
+})
+
+// Name             :   Get tour distances
+// Type             :   GET
+// Route            :   api/tours/distances/<-14.12,120.12>/unit/<mi or km>
+// Description      :   find the distances of tours/
+// Access           :   PUBLIC  
+router.get('/distances/:latlng/unit/:unit', async (req, res , next) => {
+    try {
+        const {  latlng, unit } = req.params;
+        const [lat, lng] = latlng.split(',');
+
+        const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+        if (!lat || !lng) {
+          next(
+            new AppError(
+              'Please provide latitutr and longitude in the format lat,lng.',
+              400
+            )
+          );
+        }
+      
+        const distances = await Tour.aggregate([
+          {
+            $geoNear: {
+              near: {
+                type: 'Point',
+                coordinates: [lng * 1, lat * 1]
+              },
+              distanceField: 'distance',
+              distanceMultiplier: multiplier,
+              spherical:true,
+            },
+           
+          },
+          {
+            $project: {
+              distance: 1,
+              name: 1
+            }
+          }
+        ]);
+      
+        res.status(200).json({
+          status: 'success',
+          data: {
+            data: distances
+          }
+        });
+    } catch (error) {
+        console.error(error);
+        next (new AppError(`There was an error with request`,500));
     }
 })
 
