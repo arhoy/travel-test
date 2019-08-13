@@ -3,8 +3,15 @@ const express = require('express');
 
 const connectDB = require('./config/db');
 const path = require('path');
+const pug = require('pug');
 
 const app = express();
+
+app.set('view engine', 'pug');
+app.set('views',path.join(__dirname,'views'));
+
+// serving up the static files, not using anything in CLIENT REACT
+app.use(express.static(path.join(__dirname,'public')));
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./routes/api/error');
@@ -14,6 +21,15 @@ connectDB();
 
 // Init MiddleWare for put and post requests.
 app.use(express.json({extended:false}));
+
+
+app.get('/', ( req, res)  => {
+
+  res.status(200).render('base', {
+    tour:'The Forest Hiker',
+    user: 'Jonas'
+  });
+} )
 
 // Define the routes
 app.use('/api/tasks', require('./routes/api/tasks'));
@@ -41,7 +57,7 @@ if (process.env.NODE_ENV === 'production') {
     });
   }
   
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 3000;
   
   app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
