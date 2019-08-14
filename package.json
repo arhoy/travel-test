@@ -36,7 +36,9 @@
     "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "debug": "ndb server.js"
+    "debug": "ndb server.js",
+    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
+    "build:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
   "author": "",
   "license": "ISC"

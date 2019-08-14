@@ -73,5 +73,13 @@ ReviewSchema.post(/^findOneAnd/, async function(doc) {
 // No Duplicate reviews. One review per user for a given tour
 ReviewSchema.index({tour: 1, user: 1}, {unique: true});
 
+// Populate users info in the reviews 
+ReviewSchema.pre(/^find/, function(next){
+    this.populate({
+        path: 'user',
+        select:'name photo'
+    })
+    next();
+});
 
 module.exports = Review = mongoose.model('Review', ReviewSchema);
